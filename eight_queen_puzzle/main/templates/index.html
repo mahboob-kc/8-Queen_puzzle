@@ -1,0 +1,196 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8 Queens Puzzle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .title {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 50px);
+            grid-template-rows: repeat(8, 50px);
+            gap: 1px;
+            cursor: pointer;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Alternate colors for the chessboard */
+        .cell:nth-child(odd) {
+            background-color: #f0d9b5;
+        }
+
+        .cell:nth-child(even) {
+            background-color: #b58863;
+        }
+
+        /* Color for invalid moves */
+        .invalid {
+            background-color: red !important;
+        }
+
+        /* Message box for winning */
+        .win-message {
+            display: none;
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: green;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">8 Queens Puzzle</h1>
+
+    <div class="board-container">
+        <!-- Success message -->
+        <div class="message" id="successMessage"></div>
+
+        <!-- Chessboard -->
+        <div class="board" id="chessBoard"></div>
+
+        <!-- Win message box -->
+        <div class="win-message" id="winBox">You Win!</div>
+    </div>
+
+    <script>
+        // Define the URL for the queen image
+        const queenImageUrl = "{% static 'queen.png' %}";
+        const successMessage = document.getElementById('successMessage');
+        const winBox = document.getElementById('winBox');
+
+        // Dynamically create the 8x8 chessboard
+        const board = document.getElementById('chessBoard');
+        for (let i = 0; i < 64; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.setAttribute('data-index', i);
+            cell.addEventListener('click', () => placeQueen(cell));
+            if ((Math.floor(i / 8) + (i % 8)) % 2 === 0) {
+                cell.style.backgroundColor = '#f0d9b5';
+            } else {
+                cell.style.backgroundColor = '#b58863';
+            }
+            board.appendChild(cell);
+        }
+
+        // Function to place or remove the queen on the board
+        function placeQueen(cell) {
+            const cellIndex = cell.getAttribute('data-index');
+            const row = Math.floor(cellIndex / 8);
+            const col = cellIndex % 8;
+
+            // If the cell already has a queen, remove it
+            if (cell.classList.contains('queen')) {
+                cell.classList.remove('queen');
+                cell.style.backgroundImage = '';
+                successMessage.style.display = 'none'; // Hide success message
+            } else {
+                // Check if there's already a queen in that row, column, or diagonal
+                const existingQueens = document.querySelectorAll('.queen');
+                let isOccupied = false;
+
+                existingQueens.forEach(queenCell => {
+                    const queenIndex = Array.from(board.children).indexOf(queenCell);
+                    const queenRow = Math.floor(queenIndex / 8);
+                    const queenCol = queenIndex % 8;
+
+                    // Check for conflicts: same row, same column, or diagonal
+                    if (queenRow === row || queenCol === col || Math.abs(queenRow - row) === Math.abs(queenCol - col)) {
+                        isOccupied = true;
+                    }
+                });
+
+                if (cell.classList.contains('invalid')) {
+                    cell.classList.remove('invalid'); // Remove the 'invalid' class when a new queen is placed
+                }
+
+                if (!isOccupied) {
+                    // Place the queen if the move is valid
+                    cell.classList.add('queen');
+                    cell.style.backgroundImage = `url('${queenImageUrl}')`;
+                    cell.style.backgroundSize = '70%'; // Resize queen image
+                } else {
+                    // Highlight the cell red for an invalid move
+                    cell.classList.add('invalid');
+                    alert("This column, row, or diagonal is already occupied!");
+                }
+                // Remove the 'invalid' class from all cells before making a new move
+                const invalidCells = document.querySelectorAll('.invalid');
+                invalidCells.forEach(cell => cell.classList.remove('invalid'));
+                }
+
+            checkSolution(); // Check if the current arrangement is a solution
+        }
+
+        // Function to check if the current arrangement is a solution
+        function checkSolution() {
+            const queens = document.querySelectorAll('.queen');
+            if (queens.length === 8) {
+                const cols = new Set();
+                const diag1 = new Set();
+                const diag2 = new Set();
+
+                for (const queenCell of queens) {
+                    const index = Array.from(board.children).indexOf(queenCell);
+                    const row = Math.floor(index / 8);
+                    const col = index % 8;
+
+                    if (cols.has(col) || diag1.has(row - col) || diag2.has(row + col)) {
+                        return; // If there's a conflict, exit
+                    }
+
+                    cols.add(col);
+                    diag1.add(row - col);
+                    diag2.add(row + col);
+                }
+
+                // If no conflicts, display the win message box
+                winBox.style.display = 'block';
+            } else {
+                winBox.style.display = 'none'; // Hide the box if not all queens are placed
+            }
+        }
+
+        // Load the initial solution
+        // Uncomment the next line if you want to fetch an initial solution from the server
+        // fetchSolution();
+    </script>
+</body>
+</html>
