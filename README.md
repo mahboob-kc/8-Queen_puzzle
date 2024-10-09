@@ -42,5 +42,5 @@ This project is an interactive implementation of the **8-Queens Puzzle**, a clas
 
 
 ## License:
-This project is licensed under the MIT License.
+
 
